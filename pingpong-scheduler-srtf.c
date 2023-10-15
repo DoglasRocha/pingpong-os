@@ -73,7 +73,6 @@ int main(int argc, char *argv[])
 
   ppos_init();
 
-  printf("%d", systime());
   // waiting for the first microsecond
   while (systime() <= 0)
     ;

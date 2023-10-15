@@ -72,7 +72,6 @@ struct sigaction action;
 
 // estrutura de inicialização to timer
 struct itimerval timer;
-unsigned int ticks = 0;
 
 /*unsigned int systime()
 {
@@ -82,7 +81,7 @@ unsigned int ticks = 0;
 // tratador do sinal
 void tratador(int signum)
 {
-    ticks++;
+    systemTime++;
     task_increase_running_time(taskExec);
     if (taskExec->running_time > QUANTUM)
         task_yield();
@@ -141,7 +140,7 @@ void after_task_create(task_t *task)
     printf("\ntask_create - AFTER - [%d]", task->id);
 #endif
     task_set_eet(task, 99999);
-    task->create_time = ticks;
+    task->create_time = systime();
 }
 
 void before_task_exit()
@@ -150,7 +149,7 @@ void before_task_exit()
 #ifdef DEBUG
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
-    taskExec->finish_time = ticks;
+    taskExec->finish_time = systime();
 }
 
 void after_task_exit()
