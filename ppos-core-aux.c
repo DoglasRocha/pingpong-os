@@ -147,6 +147,7 @@ void after_task_create(task_t *task)
 #endif
     task_set_eet(task, 99999);
     task->create_time = systime();
+    task->activations = 0;
 }
 
 void before_task_exit()
@@ -156,8 +157,9 @@ void before_task_exit()
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
     taskExec->finish_time = systime();
+  taskExec->activations++;
     printf("\nTask %d exit: execution time %d ms, processor time %d ms, %d activations\n",
-           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->processor_time, 0);
+           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->processor_time, taskExec->activations);
 }
 
 void after_task_exit()
@@ -174,6 +176,7 @@ void before_task_switch(task_t *task)
 #ifdef DEBUG
     printf("\ntask_switch - BEFORE - [%d -> %d]", taskExec->id, task->id);
 #endif
+    taskExec->activations++;
 }
 
 void after_task_switch(task_t *task)
@@ -182,11 +185,13 @@ void after_task_switch(task_t *task)
 #ifdef DEBUG
     printf("\ntask_switch - AFTER - [%d -> %d]", taskExec->id, task->id);
 #endif
+    //taskExec->activations++;
 }
 
 void before_task_yield()
 {
     // put your customization here
+  //taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_yield - BEFORE - [%d]", taskExec->id);
 #endif
@@ -204,6 +209,7 @@ void after_task_yield()
 void before_task_suspend(task_t *task)
 {
     // put your customization here
+  task->activations++;
 #ifdef DEBUG
     printf("\ntask_suspend - BEFORE - [%d]", task->id);
 #endif
@@ -236,6 +242,7 @@ void after_task_resume(task_t *task)
 void before_task_sleep()
 {
     // put your customization here
+  taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_sleep - BEFORE - [%d]", taskExec->id);
 #endif
