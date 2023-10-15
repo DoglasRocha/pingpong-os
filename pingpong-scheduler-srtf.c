@@ -11,7 +11,7 @@
 
 // task_t Pang, Peng, Ping, Pong, Pung ;
 
-#define USER_TASKS_MAX 10
+#define USER_TASKS_MAX 5
 task_t user_tasks[USER_TASKS_MAX];
 char user_tasks_names[USER_TASKS_MAX][15];
 // int user_tasks_execution_time[USER_TASKS_MAX] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000}; // cenario 1
@@ -40,12 +40,12 @@ void Body(void *arg)
   // se for o caso, esse campo pode ser trocado conforme a implementacao de cada equipe
   // o que importa eh esse loop sair somente se a tarefa realmente executou o X tempo que
   // foi indicado como seu tempo de execucao
-  while (taskExec->running_time < task_get_eet(NULL))
+  while (taskExec->processor_time < task_get_eet(NULL))
   {
     end_time--;
     if ((last_printed_line + 5) <= systime())
     {
-      printf("[%d]\t%s: interacao %d\t\t%d\n", systime(), (char *)arg, end_time, taskExec->running_time);
+      printf("[%d]\t%s: interacao %d\t\t%d\n", systime(), (char *)arg, end_time, taskExec->processor_time);
       last_printed_line = systime();
     }
 
@@ -92,6 +92,9 @@ int main(int argc, char *argv[])
     task_create(&user_tasks[i], Body, &user_tasks_names[i]);
     task_set_eet(&user_tasks[i], user_tasks_execution_time[i]);
   }
+
+  for (i = 0; i < USER_TASKS_MAX; i++)
+    task_join(&user_tasks[i]);
 
   task_yield();
 

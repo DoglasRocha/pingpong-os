@@ -27,7 +27,6 @@ typedef struct task_t
 
     // ... (outros campos deve ser adicionados APOS esse comentario)
     int eet, ret, prio, running_time, processor_time;
-    int type; // 0 - Núcleo, 1 - Usuário
     int create_time, finish_time;
 
 } task_t;

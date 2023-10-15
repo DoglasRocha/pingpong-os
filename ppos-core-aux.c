@@ -61,9 +61,15 @@ int task_getprio(task_t *task)
 
 void task_increase_running_time(task_t *task)
 {
+    if (task == taskMain || task == taskDisp)
+        return;
     task->processor_time++;
     task->running_time++;
     task->ret--;
+
+    // printf("%d - ret\n", task->ret);
+    // if (task_get_ret(task) <= 0)
+    // task_exit(0);
 }
 
 /* definição timer */
@@ -150,6 +156,8 @@ void before_task_exit()
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
     taskExec->finish_time = systime();
+    printf("\nTask %d exit: execution time %d ms, processor time %d ms, %d activations\n",
+           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->processor_time, 0);
 }
 
 void after_task_exit()
