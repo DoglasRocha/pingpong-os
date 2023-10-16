@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #define QUANTUM 20
+//#define DEBUG 1
 
 // registra a ação para o sinal de timer SIGALRM
 
@@ -34,19 +35,10 @@ int task_get_ret(task_t *task)
 {
     if (task == NULL)
         return taskExec->ret;
+        //printf("aaaaa %d\n", task_return->id);
+        //if (task_return != taskMain && task_return != taskDisp)
 
     return task->ret;
-}
-
-void task_setprio(task_t *task, int prio)
-{
-    if (task == NULL)
-    {
-        taskExec->prio = prio;
-        return;
-    }
-
-    task->prio = prio;
 }
 
 int task_getprio(task_t *task)
@@ -89,7 +81,7 @@ void tratador(int signum)
 {
     systemTime++;
     task_increase_running_time(taskExec);
-    if (taskExec->running_time > QUANTUM)
+    if (taskExec->running_time > QUANTUM && taskExec != taskMain && taskExec != taskDisp)
         task_yield();
 }
 // ****************************************************************************
@@ -564,19 +556,49 @@ int after_mqueue_msgs(mqueue_t *queue)
 
 task_t *scheduler()
 {
-    task_t *task_return = NULL;
+    task_t *task_return = readyQueue;
     int i;
     task_t *aux;
-    // FCFS scheduler
+    // SRTF scheduler
     if (readyQueue != NULL)
     {
-        for (i = 0, aux = readyQueue; i < countTasks; i++, aux = aux->next)
+        #ifdef DEBUG
+            printf("\n BEFORE - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
+        #endif
+
+        // define primeiro elemento a ser avaliado
+        if (countTasks > 1)
+            aux = readyQueue->next;
+        else
+            aux = readyQueue;
+
+        #ifdef DEBUG
+            printf("\n aux %d\n", aux->id);
+        #endif
+         
+        for (i = 0; i < countTasks; i++, aux = aux->next)
         {
-            if (task_return == NULL || task_get_ret(task_return) > task_get_ret(aux))
+            if (task_return == readyQueue || task_get_ret(task_return) > task_get_ret(aux)) {
+                // se for a main ou o dispatcher n retorna
+                if (aux == taskMain || aux == taskDisp)
+                    continue;
+                
+                #ifdef DEBUG 
+                    printf("\n scheduler pegou o %d\n", aux->id);
+                #endif
+
                 task_return = aux;
+            }
         }
+        #ifdef DEBUG
+            printf("\nAFTER - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
+        #endif
 
         return task_return;
     }
-    return NULL;
+    #ifdef DEBUG
+        printf("rq task_return: %d\n", readyQueue->id);
+    #endif
+
+    return readyQueue;
 }

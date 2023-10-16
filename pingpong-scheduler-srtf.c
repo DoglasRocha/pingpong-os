@@ -30,7 +30,13 @@ int last_created_task = 0;
 void Body(void *arg)
 {
   int i;
-  int end_time = one_tick * task_get_eet(NULL);
+  int end_time = one_tick * task_get_eet(NULL);/*aux = readyQueue;
+        do {
+            if (task_return == NULL || task_get_ret(task_return) > task_get_ret(aux))
+                if (aux == taskMain || aux == taskDisp)
+                    continue;
+                task_return = aux;
+        } while (aux != readyQueue);*/ 
   int last_printed_line = 0;
 
   printf("[%d]\t%s: inicio (tempo de execucao %d)\n", systime(), (char *)arg, task_get_eet(NULL));
@@ -93,9 +99,6 @@ int main(int argc, char *argv[])
     task_create(&user_tasks[i], Body, &user_tasks_names[i]);
     task_set_eet(&user_tasks[i], user_tasks_execution_time[i]);
   }
-
-  for (i = 0; i < USER_TASKS_MAX; i++)
-    task_join(&user_tasks[i]);
 
   task_yield();
 
