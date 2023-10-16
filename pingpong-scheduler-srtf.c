@@ -52,6 +52,7 @@ void Body(void *arg)
     if ((last_created_task != systime()) && (systime() % 100) == 0)
     {
       last_created_task = systime();
+      taskExec->activations++;
       // cria uma tarefa com prioridade mais alta
       sprintf(new_task_name, "NEWTask[%2d]", new_tasks_count);
       printf("Criando NOVA tarefa: %s\n", new_task_name);
