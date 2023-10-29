@@ -8,7 +8,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #define QUANTUM 20
-//#define DEBUG 1
+// #define DEBUG 1
 
 // registra a ação para o sinal de timer SIGALRM
 
@@ -35,8 +35,8 @@ int task_get_ret(task_t *task)
 {
     if (task == NULL)
         return taskExec->ret;
-        //printf("aaaaa %d\n", task_return->id);
-        //if (task_return != taskMain && task_return != taskDisp)
+    // printf("aaaaa %d\n", task_return->id);
+    // if (task_return != taskMain && task_return != taskDisp)
 
     return task->ret;
 }
@@ -55,9 +55,9 @@ void task_increase_running_time(task_t *task)
 {
     if (task == taskMain || task == taskDisp)
         return;
-    task->processor_time++;
     task->running_time++;
     task->ret--;
+    task->quantum--;
 
     // printf("%d - ret\n", task->ret);
     // if (task_get_ret(task) <= 0)
@@ -71,17 +71,14 @@ struct sigaction action;
 // estrutura de inicialização to timer
 struct itimerval timer;
 
-/*unsigned int systime()
-{
-    return ticks;
-}*/
-
 // tratador do sinal
 void tratador(int signum)
 {
     systemTime++;
     task_increase_running_time(taskExec);
-    if (taskExec->running_time > QUANTUM && taskExec != taskMain && taskExec != taskDisp)
+
+    // preempcao
+    if (taskExec->quantum == 0 && taskExec != taskMain && taskExec != taskDisp)
         task_yield();
 }
 // ****************************************************************************
@@ -149,9 +146,9 @@ void before_task_exit()
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
     taskExec->finish_time = systime();
-  taskExec->activations++;
+    // taskExec->activations++;
     printf("\nTask %d exit: execution time %d ms, processor time %d ms, %d activations\n",
-           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->processor_time, taskExec->activations);
+           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->running_time, taskExec->activations);
 }
 
 void after_task_exit()
@@ -168,7 +165,7 @@ void before_task_switch(task_t *task)
 #ifdef DEBUG
     printf("\ntask_switch - BEFORE - [%d -> %d]", taskExec->id, task->id);
 #endif
-    taskExec->activations++;
+    // taskExec->activations++;
 }
 
 void after_task_switch(task_t *task)
@@ -177,17 +174,15 @@ void after_task_switch(task_t *task)
 #ifdef DEBUG
     printf("\ntask_switch - AFTER - [%d -> %d]", taskExec->id, task->id);
 #endif
-    //taskExec->activations++;
+    // taskExec->activations++;
 }
 
 void before_task_yield()
 {
     // put your customization here
-  //taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_yield - BEFORE - [%d]", taskExec->id);
 #endif
-    taskExec->running_time = 0;
 }
 
 void after_task_yield()
@@ -201,7 +196,7 @@ void after_task_yield()
 void before_task_suspend(task_t *task)
 {
     // put your customization here
-  task->activations++;
+    // task->activations++;
 #ifdef DEBUG
     printf("\ntask_suspend - BEFORE - [%d]", task->id);
 #endif
@@ -234,7 +229,7 @@ void after_task_resume(task_t *task)
 void before_task_sleep()
 {
     // put your customization here
-  taskExec->activations++;
+    // taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_sleep - BEFORE - [%d]", taskExec->id);
 #endif
@@ -560,45 +555,40 @@ task_t *scheduler()
     int i;
     task_t *aux;
     // SRTF scheduler
-    if (readyQueue != NULL)
+    if (readyQueue == NULL)
+        return readyQueue;
+
+#ifdef DEBUG
+    printf("\n BEFORE - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
+#endif
+
+    // define primeiro elemento a ser avaliado
+    aux = countTasks > 1 ? readyQueue->next : readyQueue;
+
+#ifdef DEBUG
+    printf("\n aux %d\n", aux->id);
+#endif
+
+    for (i = 0; i < countTasks; i++, aux = aux->next)
     {
-        #ifdef DEBUG
-            printf("\n BEFORE - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
-        #endif
-
-        // define primeiro elemento a ser avaliado
-        if (countTasks > 1)
-            aux = readyQueue->next;
-        else
-            aux = readyQueue;
-
-        #ifdef DEBUG
-            printf("\n aux %d\n", aux->id);
-        #endif
-         
-        for (i = 0; i < countTasks; i++, aux = aux->next)
+        if (task_return == readyQueue || task_get_ret(task_return) > task_get_ret(aux))
         {
-            if (task_return == readyQueue || task_get_ret(task_return) > task_get_ret(aux)) {
-                // se for a main ou o dispatcher n retorna
-                if (aux == taskMain || aux == taskDisp)
-                    continue;
-                
-                #ifdef DEBUG 
-                    printf("\n scheduler pegou o %d\n", aux->id);
-                #endif
+            // se for a main ou o dispatcher n retorna
+            if (aux == taskMain || aux == taskDisp)
+                continue;
 
-                task_return = aux;
-            }
+#ifdef DEBUG
+            printf("\n scheduler pegou o %d\n", aux->id);
+#endif
+
+            task_return = aux;
         }
-        #ifdef DEBUG
-            printf("\nAFTER - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
-        #endif
-
-        return task_return;
     }
-    #ifdef DEBUG
-        printf("rq task_return: %d\n", readyQueue->id);
-    #endif
+#ifdef DEBUG
+    printf("\nAFTER - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
+#endif
 
-    return readyQueue;
+    task_return->activations++;
+    task_return->quantum = QUANTUM;
+    return task_return;
 }
