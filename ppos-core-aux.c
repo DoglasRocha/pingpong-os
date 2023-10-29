@@ -35,8 +35,6 @@ int task_get_ret(task_t *task)
 {
     if (task == NULL)
         return taskExec->ret;
-    // printf("aaaaa %d\n", task_return->id);
-    // if (task_return != taskMain && task_return != taskDisp)
 
     return task->ret;
 }
@@ -58,10 +56,6 @@ void task_increase_running_time(task_t *task)
     task->running_time++;
     task->ret--;
     task->quantum--;
-
-    // printf("%d - ret\n", task->ret);
-    // if (task_get_ret(task) <= 0)
-    // task_exit(0);
 }
 
 /* definição timer */
@@ -165,7 +159,6 @@ void before_task_switch(task_t *task)
 #ifdef DEBUG
     printf("\ntask_switch - BEFORE - [%d -> %d]", taskExec->id, task->id);
 #endif
-    // taskExec->activations++;
 }
 
 void after_task_switch(task_t *task)
@@ -174,7 +167,6 @@ void after_task_switch(task_t *task)
 #ifdef DEBUG
     printf("\ntask_switch - AFTER - [%d -> %d]", taskExec->id, task->id);
 #endif
-    // taskExec->activations++;
 }
 
 void before_task_yield()
@@ -196,7 +188,6 @@ void after_task_yield()
 void before_task_suspend(task_t *task)
 {
     // put your customization here
-    // task->activations++;
 #ifdef DEBUG
     printf("\ntask_suspend - BEFORE - [%d]", task->id);
 #endif
@@ -229,7 +220,6 @@ void after_task_resume(task_t *task)
 void before_task_sleep()
 {
     // put your customization here
-    // taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_sleep - BEFORE - [%d]", taskExec->id);
 #endif
