@@ -73,7 +73,10 @@ void tratador(int signum)
 
     // preempcao
     if (taskExec->quantum == 0 && taskExec != taskMain && taskExec != taskDisp)
+    {
+        taskExec->quantum = QUANTUM;
         task_yield();
+    }
 }
 // ****************************************************************************
 
@@ -125,24 +128,26 @@ void before_task_create(task_t *task)
 void after_task_create(task_t *task)
 {
     // put your customization here
-#ifdef DEBUG
-    printf("\ntask_create - AFTER - [%d]", task->id);
-#endif
     task_set_eet(task, 99999);
     task->create_time = systime();
     task->activations = 0;
+    task->quantum = QUANTUM;
+
+#ifdef DEBUG
+    printf("\ntask_create - AFTER - [%d]", task->id);
+#endif
 }
 
 void before_task_exit()
 {
     // put your customization here
+    taskExec->finish_time = systime();
+    printf("\nTask %d exit: execution time %d ms, processor time %d ms, %d activations\n",
+           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->running_time, taskExec->activations);
+
 #ifdef DEBUG
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
-    taskExec->finish_time = systime();
-    // taskExec->activations++;
-    printf("\nTask %d exit: execution time %d ms, processor time %d ms, %d activations\n",
-           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->running_time, taskExec->activations);
 }
 
 void after_task_exit()
@@ -579,6 +584,5 @@ task_t *scheduler()
 #endif
 
     task_return->activations++;
-    task_return->quantum = QUANTUM;
     return task_return;
 }
