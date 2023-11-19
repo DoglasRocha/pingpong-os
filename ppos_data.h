@@ -32,6 +32,11 @@ typedef struct task_t
 
 } task_t;
 
+/* funcoes criadas*/
+void task_set_eet(task_t *task, int et);
+int task_get_eet(task_t *task);
+int task_get_ret(task_t *task);
+
 // estrutura que define um semáforo
 typedef struct
 {
