@@ -29,6 +29,8 @@ typedef struct
   int num_blocks;
   int block_size;
   int ocupado;
+  int cabeca;
+  long int distperc;
   task_t *filaDisco;
   diskrequest_t *filaSolicitacoes;
   short disparado;
