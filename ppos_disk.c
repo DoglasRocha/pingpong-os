@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include "ppos.h"
 #include "disk.h"
 #include "ppos_disk.h"
+#include "ppos-core-globals.h"
 
 disk_t ppos_disco;
 
@@ -18,8 +20,9 @@ int disk_mgr_init(int *numBlocks, int *blockSize)
     ppos_disco.num_blocks = *numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0);
     ppos_disco.ocupado = 0;
     ppos_disco.filaDisco = NULL;
+    create_task(diskManager, )
 
-    return result;
+        return result;
 }
 
 // leitura de um bloco, do disco para o buffer

@@ -84,11 +84,6 @@ void tratadorDisco(int signum)
 {
     task_resume(sleepQueue);
 }
-
-void tratadorDisco(int signum)
-{
-    task_resume(sleepQueue);
-}
 // ****************************************************************************
 
 void before_ppos_init()
@@ -168,10 +163,6 @@ void before_task_exit()
 #ifdef DEBUG
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
-    taskExec->finish_time = systime();
-    taskExec->activations++;
-    printf("\nTask %d exit: execution time %d ms, processor time %d ms, %d activations\n",
-           taskExec->id, -taskExec->create_time + taskExec->finish_time, taskExec->processor_time, taskExec->activations);
 }
 
 void after_task_exit()
@@ -202,6 +193,7 @@ void after_task_switch(task_t *task)
 void before_task_yield()
 {
     // put your customization here
+    taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_yield - BEFORE - [%d]", taskExec->id);
 #endif
@@ -251,7 +243,7 @@ void after_task_resume(task_t *task)
 void before_task_sleep()
 {
     // put your customization here
-    taskExec->activations++;
+    // taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_sleep - BEFORE - [%d]", taskExec->id);
 #endif
@@ -610,6 +602,6 @@ task_t *scheduler()
     printf("\nAFTER - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
 #endif
 
-    task_return->activations++;
+    // task_return->activations++;
     return task_return;
 }
