@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include "ppos.h"
 #include "disk.h"
 #include "ppos_disk.h"
+#include "ppos-core-globals.h"
 #include <math.h>
 
 disk_t ppos_disco;
@@ -19,6 +21,7 @@ int disk_mgr_init(int *numBlocks, int *blockSize)
     ppos_disco.num_blocks = *numBlocks = disk_cmd(DISK_CMD_DISKSIZE, 0, 0);
     ppos_disco.ocupado = 0;
     ppos_disco.filaDisco = NULL;
+    // create_task(diskManager, )
     ppos_disco.disparado = 0;
     ppos_disco.cabeca = 0;
     ppos_disco.distperc = 0;
@@ -54,60 +57,69 @@ int disk_block_write(int block, void *buffer)
     return result;
 }
 
-diskrequest_t* escalonamento_disco(diskrequest_t* fila, char opc) {
-  if (fila == NULL) return NULL;
-  if (opc == 'f') {
-    diskrequest_t* aux = fila;
-    fila = fila->next;
-    return aux;
-  }
-
-  else if (opc == 's') {
-    diskrequest_t* aux = fila, *sel = fila;
-    int menor = 99999;
-    while (aux != NULL && aux != fila) {
-         if (abs(ppos_disco.cabeca - aux->block) < menor) {
-           menor = abs(ppos_disco.cabeca - aux->block);
-           sel = aux;
-         }
-      aux = aux->next;
+diskrequest_t *escalonamento_disco(diskrequest_t *fila, char opc)
+{
+    if (fila == NULL)
+        return NULL;
+    if (opc == 'f')
+    {
+        diskrequest_t *aux = fila;
+        fila = fila->next;
+        return aux;
     }
-    aux = sel->prev;
-    aux->next = sel->next;
-    sel->next->prev = aux;
-    return sel;
-  }
 
-  else if (opc == 'c') {
-    return NULL;
-  }
+    else if (opc == 's')
+    {
+        diskrequest_t *aux = fila, *sel = fila;
+        int menor = 99999;
+        while (aux != NULL && aux != fila)
+        {
+            if (abs(ppos_disco.cabeca - aux->block) < menor)
+            {
+                menor = abs(ppos_disco.cabeca - aux->block);
+                sel = aux;
+            }
+            aux = aux->next;
+        }
+        aux = sel->prev;
+        aux->next = sel->next;
+        sel->next->prev = aux;
+        return sel;
+    }
 
-  else return NULL;
+    else if (opc == 'c')
+    {
+        return NULL;
+    }
+
+    else
+        return NULL;
 }
 
-void diskDriverBody(void* args) {
-  while(1 == 1) {
-    sem_down(&(ppos_disco.acesso));
+void diskDriverBody(void *args)
+{
+    while (1 == 1)
+    {
+        sem_down(&(ppos_disco.acesso));
 
-    if (ppos_disco.disparado == 1) { //esse valor nunca é definido como 1.
-      task_resume(ppos_disco.filaDisco);
-      ppos_disco.filaDisco = ppos_disco.filaDisco->next;
-      ppos_disco.disparado = 0;
-    }
+        if (ppos_disco.disparado == 1)
+        { // esse valor nunca é definido como 1.
+            task_resume(ppos_disco.filaDisco);
+            ppos_disco.filaDisco = ppos_disco.filaDisco->next;
+            ppos_disco.disparado = 0;
+        }
 
-    if (ppos_disco.ocupado == 0 && ppos_disco.filaDisco != NULL) {
-        diskrequest_t* pedido = escalonamento_disco(ppos_disco.filaSolicitacoes, 'f');
-      //ppos_disco.distperc += abs(ppos_disco.cabeca - pedido->block); essa linha causa seg fault
-      ppos_disco.cabeca = pedido->block;
-      
-        disk_cmd(pedido->cmd, pedido->block, pedido->buffer);
-      
-      
-    printf("cabeca: %d\n", ppos_disco.cabeca); //essa linha nunca é impressa
+        if (ppos_disco.ocupado == 0 && ppos_disco.filaDisco != NULL)
+        {
+            diskrequest_t *pedido = escalonamento_disco(ppos_disco.filaSolicitacoes, 'f');
+            // ppos_disco.distperc += abs(ppos_disco.cabeca - pedido->block); essa linha causa seg fault
+            ppos_disco.cabeca = pedido->block;
+
+            disk_cmd(pedido->cmd, pedido->block, pedido->buffer);
+
+            printf("cabeca: %d\n", ppos_disco.cabeca); // essa linha nunca é impressa
+        }
+        sem_up(&(ppos_disco.acesso));
+        task_yield();
     }
-    sem_up(&(ppos_disco.acesso));
-    task_yield();
-  }
-  
 }
-

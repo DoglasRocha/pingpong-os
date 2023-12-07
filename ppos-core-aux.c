@@ -193,6 +193,7 @@ void after_task_switch(task_t *task)
 void before_task_yield()
 {
     // put your customization here
+    taskExec->activations++;
 #ifdef DEBUG
     printf("\ntask_yield - BEFORE - [%d]", taskExec->id);
 #endif
@@ -601,6 +602,6 @@ task_t *scheduler()
     printf("\nAFTER - task_return: %d, count_tasks: %d\n", task_return->id, countTasks);
 #endif
 
-    task_return->activations++;
+    // task_return->activations++;
     return task_return;
 }
